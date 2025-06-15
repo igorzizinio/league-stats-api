@@ -1,6 +1,8 @@
 # League Statas API
 
-The backend for the [League Stats](https://github.com/igorzizinio/League-Stats) app
+The backend for the [League Stats](https://github.com/igorzizinio/League-Stats) app.
+
+Note: this project is also a "learning project" (i never used Golang before)
 
 ## TODO
 
