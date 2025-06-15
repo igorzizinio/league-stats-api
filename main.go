@@ -2,6 +2,7 @@ package main
 
 import (
 	"legue-stats-api/handler"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -35,6 +36,12 @@ func main() {
 	router.POST("/match/:riotRegion/:matchId/analyze/:participantPuuid", handler.AnalyzeMatch)
 	router.GET("/match/:riotRegion/:matchId", handler.GetMatchById)
 
-	router.Run(":8080")
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = "8080"
+	}
+
+	router.Run(":" + port)
 
 }
