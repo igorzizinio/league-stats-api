@@ -10,12 +10,24 @@ import (
 func GetSummonerByPuuid(ctx *gin.Context) {
 	region := ctx.Param("region")
 	puuid := ctx.Param("puuid")
+
+	account, err := service.GetAccountByPuuid(string(util.RiotRegionFromLeague(region)), puuid)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to retrieve account by PUUID"})
+		return
+	}
+
 	summoner, err := service.GetSummonerByPuuid(region, &puuid)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to retrieve summoner"})
 		return
 	}
-	ctx.JSON(200, summoner)
+	ctx.JSON(200, gin.H{
+		"account":    account,
+		"summoner":   summoner,
+		"region":     region,
+		"riotRegion": util.RiotRegionFromLeague(region),
+	})
 
 }
 
@@ -63,7 +75,7 @@ func GetSummonerMasteriesByPuuid(ctx *gin.Context) {
 	region := ctx.Param("region")
 	puuid := ctx.Param("puuid")
 
-	masteries, err := service.GetSummonerChampionMastery(region, puuid)
+	masteries, err := service.GetSummonerChampionMasteries(region, puuid)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to retrieve summoner masteries"})
 		return

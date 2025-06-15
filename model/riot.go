@@ -16,10 +16,36 @@ type SummonerData struct {
 }
 
 type MatchData struct {
+	Metadata struct {
+		MatchId string `json:"matchId"`
+	} `json:"metadata"`
 	Info struct {
+		PlatformId   string `json:"platformId"`
+		GameMode     string `json:"gameMode"`
+		GameName     string `json:"gameName"`
+		GameType     string `json:"gameType"`
+		GameCreation int64  `json:"gameCreation"`
+		GameDuration int    `json:"gameDuration"`
+		QueueId      int    `json:"queueId"`
+		Teams        []struct {
+			TeamId int  `json:"teamId"`
+			Win    bool `json:"win"`
+		} `json:"teams"`
 		Participants []MatchParticipant `json:"participants"`
 	} `json:"info"`
 }
+
+/*
+	platformId: string
+    gameMode: GameModes
+    gameName: string
+    gameType: string
+    participants: MatchParticipant[]
+    gameCreation: number
+    gameDuration: number
+    teams: MatchTeam[]
+    queueId: number
+*/
 
 type TimelineData struct {
 	Info struct {
@@ -30,26 +56,59 @@ type TimelineData struct {
 }
 
 type MatchParticipant struct {
-	Puuid                       string `json:"puuid"`
-	RiotIdGameName              string `json:"riotIdGameName"`
-	RiotIdTagline               string `json:"riotIdTagline"`
-	ChampionName                string `json:"championName"`
-	TeamPosition                string `json:"teamPosition"`
-	Role                        string `json:"role"`
-	Kills                       int    `json:"kills"`
-	Deaths                      int    `json:"deaths"`
-	Assists                     int    `json:"assists"`
-	TotalDamageDealtToChampions int    `json:"totalDamageDealtToChampions"`
-	VisionScore                 int    `json:"visionScore"`
-	Item0                       int    `json:"item0"`
-	Item1                       int    `json:"item1"`
-	Item2                       int    `json:"item2"`
-	Item3                       int    `json:"item3"`
-	Item4                       int    `json:"item4"`
-	Item5                       int    `json:"item5"`
-	Item6                       int    `json:"item6"`
-	ParticipantId               int    `json:"participantId"`
+	RiotIdGameName string `json:"riotIdGameName"`
+	RiotIdTagline  string `json:"riotIdTagline"`
+
+	Puuid         string `json:"puuid"`
+	SummonerName  string `json:"summonerName"`
+	ChampionName  string `json:"championName"`
+	ChampLevel    int    `json:"champLevel"`
+	Role          string `json:"role"`
+	TeamId        int    `json:"teamId"`
+	TeamPosition  string `json:"teamPosition"`
+	ParticipantId int    `json:"participantId"`
+
+	Assists int `json:"assists"`
+	Deaths  int `json:"deaths"`
+	Kills   int `json:"kills"`
+
+	Item0          int `json:"item0"`
+	Item1          int `json:"item1"`
+	Item2          int `json:"item2"`
+	Item3          int `json:"item3"`
+	Item4          int `json:"item4"`
+	Item5          int `json:"item5"`
+	Item6          int `json:"item6"`
+	ItemsPurchased int `json:"itemsPurchased"`
+
+	Summoner1Id int `json:"summoner1Id"`
+	Summoner2Id int `json:"summoner2Id"`
+
+	Win bool `json:"win"`
+
+	Perks ParticipantPerks `json:"perks"`
+
+	TotalMinionsKilled   int `json:"totalMinionsKilled"`
+	NeutralMinionsKilled int `json:"neutralMinionsKilled"`
+	VisionScore          int `json:"visionScore"`
+
+	GoldEarned int `json:"goldEarned"`
+	GoldSpent  int `json:"goldSpent"`
+
+	TotalDamageDealt            int `json:"totalDamageDealt"`
+	TotalDamageDealtToChampions int `json:"totalDamageDealtToChampions"`
+
+	PhysicalDamageDealt            int `json:"physicalDamageDealt"`
+	PhysicalDamageDealtToChampions int `json:"physicalDamageDealtToChampions"`
+
+	MagicDamageDealt            int `json:"magicDamageDealt"`
+	MagicDamageDealtToChampions int `json:"magicDamageDealtToChampions"`
+
+	TrueDamageDealt            int `json:"trueDamageDealt"`
+	TrueDamageDealtToChampions int `json:"trueDamageDealtToChampions"`
 }
+
+type ParticipantPerks = map[string]any
 
 type MatchEvent struct {
 	Type          string

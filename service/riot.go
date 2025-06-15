@@ -10,6 +10,30 @@ import (
 	"strconv"
 )
 
+func GetChampionRotation(region string) (*map[string]any, error) {
+	apiKey := os.Getenv("RIOT_API_KEY")
+
+	url := fmt.Sprintf("https://%s.api.riotgames.com/lol/platform/v3/champion-rotations", region)
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("X-Riot-Token", apiKey)
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var data map[string]any
+
+	json.NewDecoder(resp.Body).Decode(&data)
+	return &data, nil
+}
+
 func GetSummonerByPuuid(region string, puuid *string) (*model.SummonerData, error) {
 	apiKey := os.Getenv("RIOT_API_KEY")
 
@@ -31,6 +55,23 @@ func GetSummonerByPuuid(region string, puuid *string) (*model.SummonerData, erro
 	var data model.SummonerData
 	json.NewDecoder(resp.Body).Decode(&data)
 
+	return &data, nil
+}
+
+func GetAccountByPuuid(region string, puuid string) (*model.AccountData, error) {
+	apiKey := os.Getenv("RIOT_API_KEY")
+	url := fmt.Sprintf("https://%s.api.riotgames.com/riot/account/v1/accounts/by-puuid/%s", region, puuid)
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("X-Riot-Token", apiKey)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	var data model.AccountData
+	json.NewDecoder(resp.Body).Decode(&data)
 	return &data, nil
 }
 
@@ -75,7 +116,7 @@ func GetSummonerLeagueByPuuid(region string, puuid string) ([]map[string]interfa
 	return data, nil
 }
 
-func GetSummonerChampionMastery(region string, puuid string) (map[string]interface{}, error) {
+func GetSummonerChampionMasteries(region string, puuid string) ([]map[string]interface{}, error) {
 	apiKey := os.Getenv("RIOT_API_KEY")
 	url := fmt.Sprintf("https://%s.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/%s", region, puuid)
 
@@ -87,14 +128,14 @@ func GetSummonerChampionMastery(region string, puuid string) (map[string]interfa
 		return nil, err
 	}
 	defer resp.Body.Close()
-	var data map[string]interface{}
+	var data []map[string]interface{}
 	json.NewDecoder(resp.Body).Decode(&data)
 	return data, nil
 }
 
-func GetMatchlistByPuuid(shard string, puuid string, options *model.GetMatchesOptions) ([]string, error) {
+func GetMatchlistByPuuid(riotRegion string, puuid string, options *model.GetMatchesOptions) ([]string, error) {
 	apiKey := os.Getenv("RIOT_API_KEY")
-	baseUrl := fmt.Sprintf("https://%s.api.riotgames.com/lol/match/v5/matches/by-puuid/%s/ids", shard, puuid)
+	baseUrl := fmt.Sprintf("https://%s.api.riotgames.com/lol/match/v5/matches/by-puuid/%s/ids", riotRegion, puuid)
 
 	params := url.Values{}
 
@@ -132,10 +173,10 @@ func GetMatchlistByPuuid(shard string, puuid string, options *model.GetMatchesOp
 	return data, nil
 }
 
-func GetMatchById(shard string, matchId string) (*model.MatchData, error) {
+func GetMatchById(riotRegion string, matchId string) (*model.MatchData, error) {
 	apiKey := os.Getenv("RIOT_API_KEY")
 
-	url := fmt.Sprintf("https://%s.api.riotgames.com/lol/match/v5/matches/%s", shard, matchId)
+	url := fmt.Sprintf("https://%s.api.riotgames.com/lol/match/v5/matches/%s", riotRegion, matchId)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("X-Riot-Token", apiKey)
 	client := &http.Client{}
@@ -149,10 +190,10 @@ func GetMatchById(shard string, matchId string) (*model.MatchData, error) {
 	return &data, nil
 }
 
-func GetTimelineByMatchId(shard string, matchId string) (*model.TimelineData, error) {
+func GetTimelineByMatchId(riotRegion string, matchId string) (*model.TimelineData, error) {
 	apiKey := os.Getenv("RIOT_API_KEY")
 
-	url := fmt.Sprintf("https://%s.api.riotgames.com/lol/match/v5/matches/%s/timeline", shard, matchId)
+	url := fmt.Sprintf("https://%s.api.riotgames.com/lol/match/v5/matches/%s/timeline", riotRegion, matchId)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("X-Riot-Token", apiKey)
 	client := &http.Client{}

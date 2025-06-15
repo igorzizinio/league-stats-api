@@ -10,10 +10,10 @@ import (
 )
 
 func GetMatchById(ctx *gin.Context) {
-	shard := ctx.Param("shard")
+	riotRegion := ctx.Param("riotRegion")
 	matchId := ctx.Param("matchId")
 
-	match, err := service.GetMatchById(shard, matchId)
+	match, err := service.GetMatchById(riotRegion, matchId)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to retrieve match"})
 		return
@@ -22,16 +22,17 @@ func GetMatchById(ctx *gin.Context) {
 }
 
 func GetMatchlistByPuuid(ctx *gin.Context) {
-	region := ctx.Param("region")
+	riotRegion := ctx.Param("riotRegion")
 	puuid := ctx.Param("puuid")
 
 	var req model.GetMatchesOptions
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid request", "details": err.Error()})
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid query parameters", "details": err.Error()})
 		return
 	}
 
-	matches, err := service.GetMatchlistByPuuid(region, puuid, &req)
+	matches, err := service.GetMatchlistByPuuid(riotRegion, puuid, &req)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to retrieve matches"})
 		return
@@ -40,14 +41,13 @@ func GetMatchlistByPuuid(ctx *gin.Context) {
 }
 
 func AnalyzeMatch(ctx *gin.Context) {
-	fmt.Println("Analyzing match...")
-	shard := ctx.Param("shard")
+	riotRegion := ctx.Param("riotRegion")
 	matchId := ctx.Param("matchId")
 	participantPuuid := ctx.Param("participantPuuid")
 
 	locale := ctx.DefaultQuery("locale", "en_US")
 
-	result, err := ai.AnalyzeMatch(shard, participantPuuid, matchId, locale)
+	result, err := ai.AnalyzeMatch(riotRegion, participantPuuid, matchId, locale)
 	if err != nil {
 		fmt.Println("Error analyzing match:", err)
 		ctx.JSON(500, gin.H{"error": "Failed to analyze match"})
