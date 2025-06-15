@@ -131,7 +131,7 @@ type OptimizedMatch struct {
 	KDA          string
 	TotalDamage  int
 	VisionScore  int
-	Items        []int
+	Items        []string
 	EventSummary []string
 }
 

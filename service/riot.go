@@ -104,7 +104,7 @@ func GetAccountByRiotId(region string, gameName string, tagLine string) (*model.
 	return &data, nil
 }
 
-func GetSummonerLeagueByPuuid(region string, puuid string) ([]map[string]interface{}, error) {
+func GetSummonerLeagueByPuuid(region string, puuid string) ([]map[string]any, error) {
 	apiKey := os.Getenv("RIOT_API_KEY")
 	url := fmt.Sprintf("https://%s.api.riotgames.com/lol/league/v4/entries/by-puuid/%s", region, puuid)
 
@@ -116,12 +116,12 @@ func GetSummonerLeagueByPuuid(region string, puuid string) ([]map[string]interfa
 		return nil, err
 	}
 	defer resp.Body.Close()
-	var data []map[string]interface{}
+	var data []map[string]any
 	json.NewDecoder(resp.Body).Decode(&data)
 	return data, nil
 }
 
-func GetSummonerChampionMasteries(region string, puuid string) ([]map[string]interface{}, error) {
+func GetSummonerChampionMasteries(region string, puuid string) ([]map[string]any, error) {
 	apiKey := os.Getenv("RIOT_API_KEY")
 	url := fmt.Sprintf("https://%s.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/%s", region, puuid)
 
@@ -133,7 +133,7 @@ func GetSummonerChampionMasteries(region string, puuid string) ([]map[string]int
 		return nil, err
 	}
 	defer resp.Body.Close()
-	var data []map[string]interface{}
+	var data []map[string]any
 	json.NewDecoder(resp.Body).Decode(&data)
 	return data, nil
 }

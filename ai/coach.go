@@ -155,10 +155,13 @@ func OptimizeMatchTimeline(
 		participant.Item5,
 		participant.Item6,
 	}
-	filteredItems := make([]int, 0)
+
+	namedItems := make([]string, 0)
 	for _, id := range itemIDs {
 		if id != 0 {
-			filteredItems = append(filteredItems, id)
+			if item, ok := items[string(rune(id))]; ok {
+				namedItems = append(namedItems, fmt.Sprintf("%s (ID: %s)", item.Name, fmt.Sprint(id)))
+			}
 		}
 	}
 
@@ -169,7 +172,7 @@ func OptimizeMatchTimeline(
 		KDA:          fmt.Sprintf("%d/%d/%d", participant.Kills, participant.Deaths, participant.Assists),
 		TotalDamage:  participant.TotalDamageDealtToChampions,
 		VisionScore:  participant.VisionScore,
-		Items:        filteredItems,
+		Items:        namedItems,
 		EventSummary: eventSummary,
 	}, nil
 }
