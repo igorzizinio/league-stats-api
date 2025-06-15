@@ -198,7 +198,7 @@ func GetMatchById(riotRegion string, matchId string) (*model.MatchData, error) {
 	var data model.MatchData
 	json.NewDecoder(resp.Body).Decode(&data)
 
-	matchCache.Set(matchId, data, cache.DefaultExpiration)
+	matchCache.Set(matchId, &data, cache.DefaultExpiration)
 
 	return &data, nil
 }
