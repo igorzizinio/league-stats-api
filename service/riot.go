@@ -8,7 +8,12 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 )
+
+var matchCache = cache.New(24*time.Hour, 1*time.Hour)
 
 func GetChampionRotation(region string) (*map[string]any, error) {
 	apiKey := os.Getenv("RIOT_API_KEY")
@@ -174,6 +179,11 @@ func GetMatchlistByPuuid(riotRegion string, puuid string, options *model.GetMatc
 }
 
 func GetMatchById(riotRegion string, matchId string) (*model.MatchData, error) {
+
+	if cached, found := matchCache.Get(matchId); found {
+		return cached.(*model.MatchData), nil
+	}
+
 	apiKey := os.Getenv("RIOT_API_KEY")
 
 	url := fmt.Sprintf("https://%s.api.riotgames.com/lol/match/v5/matches/%s", riotRegion, matchId)
@@ -187,6 +197,9 @@ func GetMatchById(riotRegion string, matchId string) (*model.MatchData, error) {
 	defer resp.Body.Close()
 	var data model.MatchData
 	json.NewDecoder(resp.Body).Decode(&data)
+
+	matchCache.Set(matchId, data, cache.DefaultExpiration)
+
 	return &data, nil
 }
 

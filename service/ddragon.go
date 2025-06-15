@@ -6,7 +6,19 @@ import (
 	"legue-stats-api/model"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 )
+
+var cacheItems = cache.New(24*time.Hour, 1*time.Hour)
+
+func LoadStaticItemsData() map[string]model.ItemData {
+	items := FetchItems("en_US")
+	cacheItems.Set("items", items, cache.DefaultExpiration)
+
+	return items
+}
 
 func GetVersions() ([]string, error) {
 
@@ -36,6 +48,15 @@ func GetVersions() ([]string, error) {
 }
 
 func GetItems(locale string) map[string]model.ItemData {
+	if data, found := cacheItems.Get("items"); found {
+		items := data.(map[string]model.ItemData)
+		return items
+	} else {
+		return LoadStaticItemsData()
+	}
+}
+
+func FetchItems(locale string) map[string]model.ItemData {
 	versions, _ := GetVersions()
 	version := versions[0]
 
