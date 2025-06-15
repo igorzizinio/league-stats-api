@@ -128,7 +128,6 @@ func GetMatchlistByPuuid(shard string, puuid string, options *model.GetMatchesOp
 	}
 	defer resp.Body.Close()
 	var data []string
-	fmt.Println("Reponse body:", resp.Body)
 	json.NewDecoder(resp.Body).Decode(&data)
 	return data, nil
 }

@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-func AnalyzeMatch(shard string, puuid string, matchId string) (map[string]interface{}, error) {
+func AnalyzeMatch(shard string, puuid string, matchId string, locale string) (map[string]interface{}, error) {
 
 	url := "https://openrouter.ai/api/v1/chat/completions"
 
@@ -30,14 +30,12 @@ func AnalyzeMatch(shard string, puuid string, matchId string) (map[string]interf
 		return nil, fmt.Errorf("failed to get match data: %w", err)
 	}
 
-	fmt.Println("Optimized Match Data:", string(otmizedString))
-
 	systemPrompt := fmt.Sprintf(`
 		You are a League of Legends coach. Your job is to analyze a player's performance based on their match and timeline data. Provide strategic, tactical, and mechanical feedback to help the player improve. Use a friendly but technically accurate tone. Never make up information — only use what is in the data.
       	You can break your feedback into early game, mid game, and late game insights if possible.
       	Also give an 'AI Score' out of 100 based on the player's performance in early, mid and late game if possible.
       	Note: Use user locale: %s
-	  `, "en_US")
+	  `, locale)
 
 	userPrompt := fmt.Sprintf(`
 		Here is the optmized data (match, timeline), the player is "participantId": %s
@@ -102,10 +100,7 @@ func OptimizeMatchTimeline(
 	var participant model.MatchParticipant
 	found := false
 
-	fmt.Println("Summoner PUUID:", summonerPuuid)
-	fmt.Println("Match info:", match)
 	for _, p := range match.Info.Participants {
-		fmt.Println("Participant PUUID:", p.Puuid)
 		if p.Puuid == summonerPuuid {
 			participant = p
 			found = true

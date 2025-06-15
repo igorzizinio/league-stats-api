@@ -40,11 +40,14 @@ func GetMatchlistByPuuid(ctx *gin.Context) {
 }
 
 func AnalyzeMatch(ctx *gin.Context) {
+	fmt.Println("Analyzing match...")
 	shard := ctx.Param("shard")
 	matchId := ctx.Param("matchId")
 	participantPuuid := ctx.Param("participantPuuid")
 
-	result, err := ai.AnalyzeMatch(shard, participantPuuid, matchId)
+	locale := ctx.DefaultQuery("locale", "en_US")
+
+	result, err := ai.AnalyzeMatch(shard, participantPuuid, matchId, locale)
 	if err != nil {
 		fmt.Println("Error analyzing match:", err)
 		ctx.JSON(500, gin.H{"error": "Failed to analyze match"})
