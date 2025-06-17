@@ -29,7 +29,7 @@ func main() {
 	router.GET("/summoner/by-riot-id/:region/:gameName/:tagLine", handler.GetSummonerByRiotId)
 
 	router.GET("/summoner/league/:region/:puuid", handler.GetSummonerLeagueByPuuid)
-	router.GET(("/summoner/masteries/:region/:puuid"), handler.GetSummonerMasteriesByPuuid)
+	router.GET("/summoner/masteries/:region/:puuid", handler.GetSummonerMasteriesByPuuid)
 
 	router.GET("/matchlist/:riotRegion/:puuid", handler.GetMatchlistByPuuid)
 
