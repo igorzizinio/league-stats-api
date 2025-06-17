@@ -1,7 +1,7 @@
 package main
 
 import (
-	"legue-stats-api/handler"
+	"league-stats-api/handler"
 	"os"
 
 	"github.com/gin-contrib/cors"

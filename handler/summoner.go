@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"legue-stats-api/service"
-	"legue-stats-api/util"
+	"league-stats-api/service"
+	"league-stats-api/util"
 
 	"github.com/gin-gonic/gin"
 )

@@ -3,7 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"legue-stats-api/model"
+	"league-stats-api/model"
 	"net/http"
 	"net/url"
 	"os"

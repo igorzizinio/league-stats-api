@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"legue-stats-api/model"
-	"legue-stats-api/service"
+	"league-stats-api/model"
+	"league-stats-api/service"
 	"net/http"
 	"os"
 )

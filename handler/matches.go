@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
-	"legue-stats-api/ai"
-	"legue-stats-api/model"
-	"legue-stats-api/service"
+	"league-stats-api/ai"
+	"league-stats-api/model"
+	"league-stats-api/service"
 
 	"github.com/gin-gonic/gin"
 )

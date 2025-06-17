@@ -2,7 +2,7 @@ package handler
 
 import (
 	"fmt"
-	"legue-stats-api/service"
+	"league-stats-api/service"
 
 	"github.com/gin-gonic/gin"
 )

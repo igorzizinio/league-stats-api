@@ -1,4 +1,4 @@
-module legue-stats-api
+module league-stats-api
 
 go 1.24.3
 
