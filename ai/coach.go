@@ -31,15 +31,29 @@ func AnalyzeMatch(shard string, puuid string, matchId string, locale string) (ma
 	}
 
 	systemPrompt := fmt.Sprintf(`
-		You are a League of Legends coach. Your job is to analyze a player's performance based on their match and timeline data. Provide strategic, tactical, and mechanical feedback to help the player improve. Use a friendly but technically accurate tone. Never make up information — only use what is in the data.
-      	You can break your feedback into early game, mid game, and late game insights if possible.
-      	Also give an 'AI Score' out of 100 based on the player's performance in early, mid and late game if possible.
-      	Note: Use user locale: %s
-	  `, locale)
+		You are a professional League of Legends coach AI.
+		Your role is to analyze a player's match performance based strictly on the provided match data and timeline.
+		
+		Give detailed and constructive feedback to help the player improve.
+		Your analysis must be:
+		- Technically accurate and relevant to the role/champion played
+		- Split into Early Game (0–14min), Mid Game (14–25min), and Late Game (25min+), if data allows
+		- Focused on key aspects: laning phase, roaming, vision control, teamfights, objective control, positioning, mechanics, and decision making
+
+		Also include:
+		- A friendly but direct coaching tone
+		- An AI Performance Score (0–100) for each phase, and an overall score
+
+		Important rules:
+		- NEVER guess or make up information
+		- ONLY use what is provided in the match and timeline data
+		- Respect the user's locale and respond accordingly (language, terminology): %s
+	`, locale)
 
 	userPrompt := fmt.Sprintf(`
-		Here is the optmized data (match, timeline), the player is "participantId": %s
-
+		Below is optimized League of Legends data from one match, including match summary and timeline events.
+		You are analyzing the player with: "participantId": %s
+		Data:
 		%s
 	`, puuid, string(otmizedString))
 
@@ -80,13 +94,13 @@ func AnalyzeMatch(shard string, puuid string, matchId string, locale string) (ma
 
 	defer res.Body.Close()
 
-	var response map[string]interface{}
+	var response map[string]any
 	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
 		return nil, err
 	}
 
-	return map[string]interface{}{
-		"content": response["choices"].([]interface{})[0].(map[string]interface{})["message"].(map[string]interface{})["content"],
+	return map[string]any{
+		"content": response["choices"].([]any)[0].(map[string]any)["message"].(map[string]any)["content"],
 	}, err
 
 }
@@ -133,14 +147,36 @@ func OptimizeMatchTimeline(
 				eventSummary = append(eventSummary, fmt.Sprintf("Kill %s at %d min", victim, minute))
 			} else {
 				killer := match.Info.Participants[e.KillerId-1].ChampionName
-				eventSummary = append(eventSummary, fmt.Sprintf("Dead to %s at %d min", killer, minute))
+				eventSummary = append(eventSummary, fmt.Sprintf("Death to %s at %d min", killer, minute))
 			}
+		case "CHAMPION_SPECIAL_KILL":
+			eventSummary = append(eventSummary, fmt.Sprintf("Got a %s at %d min", e.KillType, minute))
 		case "ITEM_PURCHASED":
 			if item, ok := items[e.ItemId]; ok {
-				eventSummary = append(eventSummary, fmt.Sprintf("Item buy %s at %d min", item.Name, minute))
+				eventSummary = append(eventSummary, fmt.Sprintf("Bought %s at %d min", item.Name, minute))
+			}
+		case "ITEM_UNDO":
+			if item, ok := items[e.ItemId]; ok {
+				eventSummary = append(eventSummary, fmt.Sprintf("Undid %s at %d min", item.Name, minute))
+			}
+		case "ITEM_DESTROYED":
+			if item, ok := items[e.ItemId]; ok {
+				eventSummary = append(eventSummary, fmt.Sprintf("Destroyed %s at %d min", item.Name, minute))
 			}
 		case "SKILL_LEVEL_UP":
-			eventSummary = append(eventSummary, fmt.Sprintf("Up skill slot %d at %d min", e.SkillSlot, minute))
+			eventSummary = append(eventSummary, fmt.Sprintf("Upgraded skill slot %d at %d min", e.SkillSlot, minute))
+		case "ELITE_MONSTER_KILL":
+			eventSummary = append(eventSummary, fmt.Sprintf("Took %s at %d min", e.MonsterType, minute)) // DRAGON, BARON_NASHOR, etc.
+		case "BUILDING_KILL":
+			eventSummary = append(eventSummary, fmt.Sprintf("Destroyed %s at %d min", e.BuildingType, minute)) // TOWER_BUILDING, INHIBITOR_BUILDING
+		case "WARD_PLACED":
+			eventSummary = append(eventSummary, fmt.Sprintf("Placed ward at %d min", minute))
+		case "WARD_KILL":
+			eventSummary = append(eventSummary, fmt.Sprintf("Destroyed ward at %d min", minute))
+		case "TURRET_PLATE_DESTROYED":
+			eventSummary = append(eventSummary, fmt.Sprintf("Destroyed turret plate at %d min", minute))
+		case "CHAMPION_TRANSFORM":
+			eventSummary = append(eventSummary, fmt.Sprintf("Transformed champion at %d min", minute)) // Ex: Kayn forma azul/vermelha
 		default:
 			eventSummary = append(eventSummary, fmt.Sprintf("%s at %d min", e.Type, minute))
 		}

@@ -118,6 +118,9 @@ type MatchEvent struct {
 	VictimId      int
 	ItemId        string
 	SkillSlot     int
+	KillType      string
+	MonsterType   string
+	BuildingType  string
 }
 
 type ItemData struct {

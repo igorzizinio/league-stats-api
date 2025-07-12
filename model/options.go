@@ -8,12 +8,3 @@ type GetMatchesOptions struct {
 	StartIndex *int    `json:"start,omitempty" query:"start,omitempty" form:"start,omitempty"`
 	Count      *int    `json:"count,omitempty" query:"count,omitempty" form:"count,omitempty"`
 }
-
-/*
-	startTime?: number
-  	endTime?: number
-  	queue?: number
-  	type?: string
-  	start?: number
-  	count?: number
-*/
