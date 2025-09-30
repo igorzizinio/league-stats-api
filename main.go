@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"league-stats-api/handler"
 	"os"
 
@@ -11,7 +12,9 @@ import (
 
 func main() {
 
-	godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("No .env file found, using system enviroment variables.");
+	}
 
 	router := gin.Default()
 
