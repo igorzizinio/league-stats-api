@@ -15,7 +15,7 @@ import (
 func main() {
 
 	if err := godotenv.Load(); err != nil {
-		fmt.Println("No .env file found, using default system enviroment variables.")
+		fmt.Println("No .env file found, using system default environment variables.")
 	}
 
 	router := gin.Default()
