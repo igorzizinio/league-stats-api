@@ -1,0 +1,90 @@
+package ddragon
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"time"
+
+	"github.com/igorzizinio/league-stats-api/internal/model"
+	"github.com/patrickmn/go-cache"
+)
+
+var cacheItems = cache.New(24*time.Hour, 1*time.Hour)
+
+func LoadStaticItemsData() map[string]model.ItemData {
+	items := FetchItems("en_US")
+	cacheItems.Set("items", items, cache.DefaultExpiration)
+
+	return items
+}
+
+func GetVersions() ([]string, error) {
+
+	url := "https://ddragon.leagueoflegends.com/api/versions.json"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	var versions []string
+	if err := json.NewDecoder(resp.Body).Decode(&versions); err != nil {
+		return nil, err
+	}
+
+	if len(versions) == 0 {
+		return nil, fmt.Errorf("no versions found")
+	}
+
+	return versions, nil
+}
+
+func GetItems(locale string) map[string]model.ItemData {
+	if data, found := cacheItems.Get("items"); found {
+		items := data.(map[string]model.ItemData)
+		return items
+	} else {
+		return LoadStaticItemsData()
+	}
+}
+
+func FetchItems(locale string) map[string]model.ItemData {
+	versions, _ := GetVersions()
+	version := versions[0]
+
+	url := fmt.Sprintf(
+		"https://ddragon.leagueoflegends.com/cdn/%s/data/%s/item.json",
+		url.QueryEscape(version),
+		url.QueryEscape(locale),
+	)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return nil
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error making request:", err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	var data model.DDragonItemData
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		fmt.Println("Error decoding response:", err)
+		return nil
+	}
+
+	return data.Data
+}
