@@ -35,18 +35,6 @@ type MatchData struct {
 	} `json:"info"`
 }
 
-/*
-	platformId: string
-    gameMode: GameModes
-    gameName: string
-    gameType: string
-    participants: MatchParticipant[]
-    gameCreation: number
-    gameDuration: number
-    teams: MatchTeam[]
-    queueId: number
-*/
-
 type TimelineData struct {
 	Info struct {
 		Frames []struct {
