@@ -282,6 +282,8 @@ func OptimizeMatchTimeline(
 			if e.KillerId == participantID {
 				victim := match.Info.Participants[e.VictimId-1].ChampionName
 				eventSummary = append(eventSummary, fmt.Sprintf("Kill %s at %d min", victim, minute))
+			} else if e.KillerId <= 0 {
+				eventSummary = append(eventSummary, fmt.Sprintf("Executed at %d min", minute))
 			} else {
 				killer := match.Info.Participants[e.KillerId-1].ChampionName
 				eventSummary = append(eventSummary, fmt.Sprintf("Death to %s at %d min", killer, minute))
