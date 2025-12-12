@@ -12,6 +12,7 @@ import (
 func RegisterRoutes(router *gin.Engine) {
 	router.GET("/matchlist/:riotRegion/:puuid", GetMatchlistByPuuid)
 	router.POST("/match/:riotRegion/:matchId/analyze/:participantPuuid", AnalyzeMatch)
+	router.POST("/match/:riotRegion/:matchId/analyze/:participantPuuid/stream", AnalyzeMatchStream)
 	router.GET("/match/:riotRegion/:matchId", GetMatchById)
 }
 
@@ -60,4 +61,49 @@ func AnalyzeMatch(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(200, result)
+}
+
+// AnalyzeMatchStream handles streaming AI analysis via Server-Sent Events
+func AnalyzeMatchStream(ctx *gin.Context) {
+	riotRegion := ctx.Param("riotRegion")
+	matchId := ctx.Param("matchId")
+	participantPuuid := ctx.Param("participantPuuid")
+
+	locale := ctx.DefaultQuery("locale", "en_US")
+
+	// Set headers for Server-Sent Events
+	ctx.Header("Content-Type", "text/event-stream")
+	ctx.Header("Cache-Control", "no-cache")
+	ctx.Header("Connection", "keep-alive")
+	ctx.Header("Transfer-Encoding", "chunked")
+	ctx.Header("Access-Control-Allow-Origin", "*")
+
+	// Flush headers immediately
+	ctx.Writer.Flush()
+
+	err := ai.AnalyzeMatchStream(riotRegion, participantPuuid, matchId, locale, func(chunk ai.StreamChunk) error {
+		if chunk.Done {
+			// Send done event
+			_, err := ctx.Writer.Write([]byte("data: {\"done\":true}\n\n"))
+			ctx.Writer.Flush()
+			return err
+		}
+
+		// Escape newlines and special characters for JSON
+		data := fmt.Sprintf("data: {\"content\":%q,\"done\":false}\n\n", chunk.Content)
+		_, err := ctx.Writer.Write([]byte(data))
+		if err != nil {
+			return err
+		}
+		ctx.Writer.Flush()
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println("Error streaming match analysis:", err)
+		// If we haven't started streaming yet, we can return an error
+		// Otherwise, we just close the connection
+		ctx.Writer.Write([]byte(fmt.Sprintf("data: {\"error\":%q}\n\n", err.Error())))
+		ctx.Writer.Flush()
+	}
 }

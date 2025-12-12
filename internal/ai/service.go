@@ -1,35 +1,40 @@
 package ai
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/igorzizinio/league-stats-api/internal/ddragon"
 	"github.com/igorzizinio/league-stats-api/internal/model"
 	"github.com/igorzizinio/league-stats-api/internal/riot"
 )
 
-func AnalyzeMatch(shard string, puuid string, matchId string, locale string) (map[string]interface{}, error) {
+// StreamChunk represents a chunk of streamed response
+type StreamChunk struct {
+	Content string `json:"content"`
+	Done    bool   `json:"done"`
+}
 
-	url := "https://openrouter.ai/api/v1/chat/completions"
-
+// prepareMatchData prepares the match data and prompts for AI analysis
+func prepareMatchData(shard string, puuid string, matchId string, locale string) (string, string, error) {
 	match, _ := riot.GetMatchById(shard, matchId)
 	timeline, _ := riot.GetTimelineByMatchId(shard, matchId)
 
 	optmized, err := OptimizeMatchTimeline(puuid, *match, *timeline, ddragon.GetItems("en_US"))
-
 	if err != nil {
-		return nil, fmt.Errorf("failed to optimize match timeline: %w", err)
+		return "", "", fmt.Errorf("failed to optimize match timeline: %w", err)
 	}
 
 	otmizedString, err := json.Marshal(optmized)
-
 	if err != nil {
-		return nil, fmt.Errorf("failed to get match data: %w", err)
+		return "", "", fmt.Errorf("failed to get match data: %w", err)
 	}
 
 	systemPrompt := fmt.Sprintf(`
@@ -58,6 +63,17 @@ func AnalyzeMatch(shard string, puuid string, matchId string, locale string) (ma
 		Data:
 		%s
 	`, puuid, string(otmizedString))
+
+	return systemPrompt, userPrompt, nil
+}
+
+func AnalyzeMatch(shard string, puuid string, matchId string, locale string) (map[string]interface{}, error) {
+	url := "https://openrouter.ai/api/v1/chat/completions"
+
+	systemPrompt, userPrompt, err := prepareMatchData(shard, puuid, matchId, locale)
+	if err != nil {
+		return nil, err
+	}
 
 	payload := map[string]any{
 		"model": os.Getenv("OPENROUTER_MODEL"),
@@ -105,6 +121,125 @@ func AnalyzeMatch(shard string, puuid string, matchId string, locale string) (ma
 		"content": response["choices"].([]any)[0].(map[string]any)["message"].(map[string]any)["content"],
 	}, err
 
+}
+
+// AnalyzeMatchStream streams the AI analysis response chunk by chunk
+func AnalyzeMatchStream(shard string, puuid string, matchId string, locale string, onChunk func(chunk StreamChunk) error) error {
+	url := "https://openrouter.ai/api/v1/chat/completions"
+
+	systemPrompt, userPrompt, err := prepareMatchData(shard, puuid, matchId, locale)
+	if err != nil {
+		return err
+	}
+
+	payload := map[string]any{
+		"model":  os.Getenv("OPENROUTER_MODEL"),
+		"stream": true,
+		"messages": []map[string]any{
+			{
+				"role":    "system",
+				"content": systemPrompt,
+			},
+			{
+				"role":    "user",
+				"content": userPrompt,
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("OPENROUTER_API_KEY"))
+	req.Header.Set("Accept", "text/event-stream")
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("API error (status %d): %s", res.StatusCode, string(body))
+	}
+
+	reader := bufio.NewReader(res.Body)
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return fmt.Errorf("failed to read stream: %w", err)
+		}
+
+		line = strings.TrimSpace(line)
+
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, ":") {
+			continue
+		}
+
+		// SSE format: "data: {...}"
+		if !strings.HasPrefix(line, "data: ") {
+			continue
+		}
+
+		data := strings.TrimPrefix(line, "data: ")
+
+		// Check for stream end
+		if data == "[DONE]" {
+			if err := onChunk(StreamChunk{Content: "", Done: true}); err != nil {
+				return err
+			}
+			break
+		}
+
+		// Parse the JSON chunk
+		var chunk map[string]any
+		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+			continue // Skip malformed chunks
+		}
+
+		// Extract content from the delta
+		choices, ok := chunk["choices"].([]any)
+		if !ok || len(choices) == 0 {
+			continue
+		}
+
+		choice, ok := choices[0].(map[string]any)
+		if !ok {
+			continue
+		}
+
+		delta, ok := choice["delta"].(map[string]any)
+		if !ok {
+			continue
+		}
+
+		content, ok := delta["content"].(string)
+		if !ok || content == "" {
+			continue
+		}
+
+		// Send the chunk to the callback
+		if err := onChunk(StreamChunk{Content: content, Done: false}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func OptimizeMatchTimeline(
