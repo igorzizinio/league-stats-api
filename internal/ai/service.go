@@ -54,6 +54,7 @@ func prepareMatchData(shard string, puuid string, matchId string, locale string)
 		Important rules:
 		- NEVER guess or make up information
 		- ONLY use what is provided in the match and timeline data
+		- Use latest League of Legends terminology, data and meta concepts relevant to the match
 		- Respect the user's locale and respond accordingly (language, terminology): %s
 	`, locale)
 
@@ -86,6 +87,9 @@ func AnalyzeMatch(shard string, puuid string, matchId string, locale string) (ma
 				"role":    "user",
 				"content": userPrompt,
 			},
+		},
+		"reasoning": map[string]any{
+			"enabled": true,
 		},
 	}
 
