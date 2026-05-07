@@ -99,16 +99,23 @@ type MatchParticipant struct {
 type ParticipantPerks = map[string]any
 
 type MatchEvent struct {
-	Type          string
-	Timestamp     int
-	ParticipantId int
-	KillerId      int
-	VictimId      int
-	ItemId        string
-	SkillSlot     int
-	KillType      string
-	MonsterType   string
-	BuildingType  string
+	Type                    string `json:"type"`
+	Timestamp               int    `json:"timestamp"`
+	ParticipantId           int    `json:"participantId"`
+	KillerId                int    `json:"killerId"`
+	VictimId                int    `json:"victimId"`
+	ItemId                  int    `json:"itemId"`
+	SkillSlot               int    `json:"skillSlot"`
+	KillType                string `json:"killType"`
+	MonsterType             string `json:"monsterType"`
+	MonsterSubType          string `json:"monsterSubType"`
+	BuildingType            string `json:"buildingType"`
+	LaneType                string `json:"laneType"`
+	WardType                string `json:"wardType"`
+	AssistingParticipantIds []int  `json:"assistingParticipantIds"`
+	CreatorId               int    `json:"creatorId"`
+	TeamId                  int    `json:"teamId"`
+	LevelUpType             string `json:"levelUpType"`
 }
 
 type ItemData struct {
@@ -116,14 +123,27 @@ type ItemData struct {
 }
 
 type OptimizedMatch struct {
-	Name         string
-	Champion     string
-	Role         string
-	KDA          string
-	TotalDamage  int
-	VisionScore  int
-	Items        []string
-	EventSummary []string
+	Name             string
+	Champion         string
+	Role             string
+	KDA              string
+	TotalDamage      int
+	VisionScore      int
+	Items            []string
+	EventSummary     []string
+	GameContext      map[string]any            `json:"gameContext,omitempty"`
+	PlayerSnapshot   map[string]any            `json:"playerSnapshot,omitempty"`
+	PhaseStats       map[string]map[string]int `json:"phaseStats,omitempty"`
+	CombatStats      map[string]int            `json:"combatStats,omitempty"`
+	ObjectiveStats   map[string]int            `json:"objectiveStats,omitempty"`
+	VisionStats      map[string]int            `json:"visionStats,omitempty"`
+	DataCompleteness map[string]int            `json:"dataCompleteness,omitempty"`
+	// ItemsFull contains the full DDragon items dataset (keyed by item id)
+	ItemsFull map[string]any `json:"itemsFull,omitempty"`
+	// ChampionData contains the champion details (spells, scalings, stats)
+	ChampionData map[string]any `json:"championData,omitempty"`
+	// ItemSummaries provides per-item status and event counts for the participant
+	ItemSummaries map[string]map[string]any `json:"itemSummaries,omitempty"`
 }
 
 type DDragonItemData struct {
