@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/igorzizinio/league-stats-api/internal/model"
+	"github.com/igorzizinio/league-stats-api/internal/util"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -80,7 +81,7 @@ func GetAccountByPuuid(region string, puuid string) (*model.AccountData, error) 
 	return &data, nil
 }
 
-func GetAccountByRiotId(region string, gameName string, tagLine string) (*model.AccountData, error) {
+func GetAccountByRiotId(region util.RiotRegion, gameName string, tagLine string) (*model.AccountData, error) {
 	apiKey := os.Getenv("RIOT_API_KEY")
 
 	url := fmt.Sprintf("https://%s.api.riotgames.com/riot/account/v1/accounts/by-riot-id/%s/%s", region, gameName, tagLine)

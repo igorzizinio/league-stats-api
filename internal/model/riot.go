@@ -37,9 +37,7 @@ type MatchData struct {
 
 type TimelineData struct {
 	Info struct {
-		Frames []struct {
-			Events []MatchEvent `json:"events"`
-		} `json:"frames"`
+		Frames []MatchFrame `json:"frames"`
 	} `json:"info"`
 }
 
@@ -86,6 +84,8 @@ type MatchParticipant struct {
 	TotalDamageDealt            int `json:"totalDamageDealt"`
 	TotalDamageDealtToChampions int `json:"totalDamageDealtToChampions"`
 
+	TotalDamageTaken int `json:"totalDamageTaken"`
+
 	PhysicalDamageDealt            int `json:"physicalDamageDealt"`
 	PhysicalDamageDealtToChampions int `json:"physicalDamageDealtToChampions"`
 
@@ -94,13 +94,45 @@ type MatchParticipant struct {
 
 	TrueDamageDealt            int `json:"trueDamageDealt"`
 	TrueDamageDealtToChampions int `json:"trueDamageDealtToChampions"`
+
+	TotalHeal int `json:"totalHeal"`
+
+	DamageSelfMitigated int `json:"damageSelfMitigated"`
+
+	TotalHealsOnTeammates   int  `json:"totalHealsOnTeammates"`
+	DamageDealtToObjectives int  `json:"damageDealtToObjectives"`
+	DamageDealtToTurrets    int  `json:"damageDealtToTurrets"`
+	TimeCCingOthers         int  `json:"timeCCingOthers"`
+	FirstBloodKill          bool `json:"firstBloodKill"`
+	FirstTowerKill          bool `json:"firstTowerKill"`
+
+	Challenges map[string]any `json:"challenges"`
 }
 
-type ParticipantPerks = map[string]any
+type ParticipantPerks struct {
+	StatPerks struct {
+		Defense int `json:"defense"`
+		Flex    int `json:"flex"`
+		Offense int `json:"offense"`
+	} `json:"statPerks"`
+	Styles []struct {
+		// TODO: documentar melhor isso, pq oq é var1, var2, var3? e o que é perk?
+		Selections []struct {
+			Perk int `json:"perk"`
+			Var1 int `json:"var1"`
+			Var2 int `json:"var2"`
+			Var3 int `json:"var3"`
+		} `json:"selections"`
+		Description string `json:"description"`
+	} `json:"styles"`
+}
 
 type MatchEvent struct {
-	Type                    string `json:"type"`
-	Timestamp               int    `json:"timestamp"`
+	Type          string `json:"type"`
+	Timestamp     int    `json:"timestamp"`
+	RealTimestamp int    `json:"realTimestamp"`
+
+	// Não documentado, mas podem estar presentes?
 	ParticipantId           int    `json:"participantId"`
 	KillerId                int    `json:"killerId"`
 	VictimId                int    `json:"victimId"`
@@ -116,6 +148,28 @@ type MatchEvent struct {
 	CreatorId               int    `json:"creatorId"`
 	TeamId                  int    `json:"teamId"`
 	LevelUpType             string `json:"levelUpType"`
+	KillStreakLength        int    `json:"killStreakLength"`
+	Bounty                  int    `json:"bounty"`
+}
+
+type MatchFrame struct {
+	Timestamp         int                              `json:"timestamp"`
+	ParticipantFrames map[string]MatchParticipantFrame `json:"participantFrames"`
+	Events            []MatchEvent                     `json:"events"`
+}
+
+type MatchParticipantFrame struct {
+	ChampionStats            map[string]any     `json:"championStats"`
+	CurrentGold              int                `json:"currentGold"`
+	DamageStats              map[string]any     `json:"damageStats"`
+	GoldPerSecond            int                `json:"goldPerSecond"`
+	JungleMinionsKilled      int                `json:"jungleMinionsKilled"`
+	Level                    int                `json:"level"`
+	MinionsKilled            int                `json:"minionsKilled"`
+	Position                 map[string]float64 `json:"position"`
+	TimeEnemySpentControlled int                `json:"timeEnemySpentControlled"`
+	TotalGold                int                `json:"totalGold"`
+	XP                       int                `json:"xp"`
 }
 
 type ItemData struct {
@@ -143,7 +197,12 @@ type OptimizedMatch struct {
 	// ChampionData contains the champion details (spells, scalings, stats)
 	ChampionData map[string]any `json:"championData,omitempty"`
 	// ItemSummaries provides per-item status and event counts for the participant
-	ItemSummaries map[string]map[string]any `json:"itemSummaries,omitempty"`
+	ItemSummaries    map[string]map[string]any `json:"itemSummaries,omitempty"`
+	OpponentSnapshot map[string]any            `json:"opponentSnapshot,omitempty"`
+	Challenges       map[string]any            `json:"challenges,omitempty"`
+	Runes            map[string]any            `json:"runes,omitempty"`
+	SkillOrder       []int                     `json:"skillOrder,omitempty"`
+	GoldXpTimeline   []map[string]any          `json:"goldXpTimeline,omitempty"`
 }
 
 type DDragonItemData struct {

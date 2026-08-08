@@ -1,6 +1,8 @@
 package summoner
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/igorzizinio/league-stats-api/internal/riot"
 	"github.com/igorzizinio/league-stats-api/internal/util"
@@ -19,16 +21,16 @@ func GetSummonerByPuuid(ctx *gin.Context) {
 
 	account, err := riot.GetAccountByPuuid(string(util.RiotRegionFromLeague(region)), puuid)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve account by PUUID"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve account by PUUID"})
 		return
 	}
 
 	summoner, err := riot.GetSummonerByPuuid(region, &puuid)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve summoner"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve summoner"})
 		return
 	}
-	ctx.JSON(200, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"account":    account,
 		"summoner":   summoner,
 		"region":     region,
@@ -44,23 +46,23 @@ func GetSummonerByRiotId(ctx *gin.Context) {
 	gameName := ctx.Param("gameName")
 	tagLine := ctx.Param("tagLine")
 
-	account, err := riot.GetAccountByRiotId(string(riotRegion), gameName, tagLine)
+	account, err := riot.GetAccountByRiotId(riotRegion, gameName, tagLine)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve riot account"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve riot account"})
 		return
 	}
 
 	summoner, err := riot.GetSummonerByPuuid(region, &account.Puuid)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve summoner by PUUID"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve summoner by PUUID"})
 		return
 	}
 
-	ctx.JSON(200, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"account":    account,
 		"summoner":   summoner,
 		"region":     region,
-		"riotRegion": string(riotRegion),
+		"riotRegion": riotRegion,
 	})
 
 }
@@ -71,10 +73,10 @@ func GetSummonerLeagueByPuuid(ctx *gin.Context) {
 
 	leagues, err := riot.GetSummonerLeagueByPuuid(region, puuid)
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve summoner leagues"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve summoner leagues"})
 		return
 	}
-	ctx.JSON(200, leagues)
+	ctx.JSON(http.StatusOK, leagues)
 }
 
 func GetSummonerMasteriesByPuuid(ctx *gin.Context) {
@@ -82,9 +84,10 @@ func GetSummonerMasteriesByPuuid(ctx *gin.Context) {
 	puuid := ctx.Param("puuid")
 
 	masteries, err := riot.GetSummonerChampionMasteries(region, puuid)
+
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to retrieve summoner masteries"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve summoner masteries"})
 		return
 	}
-	ctx.JSON(200, masteries)
+	ctx.JSON(http.StatusOK, masteries)
 }
